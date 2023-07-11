@@ -21,7 +21,7 @@ const filePathMap = {
 }
 
 /**
- * reads local csv file and converts data into POJO
+ * Reads local csv file and converts data into POJO
  * @param {string} filePath - path to translation csv file [must be formatted with uk words in first row see readme.md for more details]
  * @returns {promise - object} e.g. { countryCode: 'translations', countryCode: 'translations'... }
  */
@@ -48,7 +48,7 @@ function readFileFromPath(filePath) {
 }
 
 /**
- * reads google sheet and converts data into POJO
+ * Reads google sheet and converts data into POJO
  * @param {string} sheetId - google sheet id [sheet must be formatted with uk words in first row see readme.md for more details]
  * @returns {object} e.g. { countryCode: 'translations', countryCode: 'translations'... }
  */
@@ -69,4 +69,34 @@ async function readFromGoogleSheet(sheetId) {
         translations[country] = translation
     })
     return translations
+}
+
+/**
+ * Concatenates the given translation to the specified file
+ * @param {string} translation - magento translation e.g. 'ukWord,translatedWord \n'
+ * @param {string} fileName - name of file to write to
+ * @param {string} country - country code e.g. ES
+ * @return {void}
+ */
+async function concatToFile(translation, fileName, country) {
+    try {
+        await fs.promises.appendFile(keys.translationsDir + fileName, translation)
+        console.log(`${country}: data appended successfully`)
+    } catch (error) {
+        console.log(country + ':')
+        console.error(error)
+    }
+}
+
+/**
+ * Adds translations to the corresponding files
+ * @param {Object} translations - e.g { countryCode: 'translations', countryCode: 'translaltions'... }
+ * @return {void}
+ */
+function addTranslationsToFiles(translations) {
+    for (let [countryCode, translation] of Object.entries(translations)) {
+        if (filePathMap[countryCode]) {
+            concatToFile(translation, filePathMap[countryCode], countryCode)
+        }
+    }
 }

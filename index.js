@@ -1,10 +1,29 @@
 const fs = require('fs')
 const csv = require('csv-parser')
+const axios = require('axios')
+
+const GOOGLE_SHEET_BASE_URL = 'https://sheets.googleapis.com/v4/spreadsheets/'
+const keys = require('./keys')
+const filePathMap = {
+    DE: 'de_DE.csv',
+    FR: 'fr_FR.csv',
+    ES: 'es_ES.csv',
+    IT: 'it_IT.csv',
+    NL: 'nl_NL.csv',
+    DK: 'da_DK.csv',
+    SE: 'sv_SE.csv',
+    NO: 'nb_NO.csv',
+    PL: 'pl_PL.csv',
+    PT: 'pt_PT.csv',
+    FI: 'fi_FI.csv',
+    CH_DE: 'de_CH.csv',
+    CH_FR: 'ch_FR.csv'
+}
 
 /**
  * reads local csv file and converts data into POJO
  * @param {string} filePath - path to translation csv file [must be formatted with uk words in first row see readme.md for more details]
- * @returns {object} e.g. { countryCode: 'translations', countryCode: 'translations'... }
+ * @returns {promise - object} e.g. { countryCode: 'translations', countryCode: 'translations'... }
  */
 function readFileFromPath(filePath) {
     return new Promise((resolve, reject) => {
@@ -27,6 +46,27 @@ function readFileFromPath(filePath) {
             .on('error', (error) => reject(error))
     })
 }
-readFileFromPath('/home/matt/translations.csv')
-    .then(data => console.log(data))
-    .catch(err => console.error(err))
+
+/**
+ * reads google sheet and converts data into POJO
+ * @param {string} sheetId - google sheet id [sheet must be formatted with uk words in first row see readme.md for more details]
+ * @returns {object} e.g. { countryCode: 'translations', countryCode: 'translations'... }
+ */
+async function readFromGoogleSheet(sheetId) {
+    const url = GOOGLE_SHEET_BASE_URL + sheetId + '/values/A1:S40?key=' + keys.googleSheets
+    const { data: jsonData } = await axios.get(url, { responseType: 'json'})
+    const translations = {}
+
+    // map data to { countryCode: 'translations'}
+    const ukRow = jsonData.values.shift() // first row (top of the table) is always the uk
+    ukRow.shift()
+    jsonData.values.forEach(countryTranslations => {
+        const country = countryTranslations.shift() // remove country code from the start
+        translation = ''
+        ukRow.forEach((ukWord, i) => {
+            translation += ukWord + ',' + countryTranslations[i] + '\n'
+        })
+        translations[country] = translation
+    })
+    return translations
+}

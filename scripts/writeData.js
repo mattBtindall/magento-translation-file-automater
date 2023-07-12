@@ -27,6 +27,9 @@ const filePathMap = {
  */
 async function concatToFile(translation, fileName, country, writePath) {
     try {
+        if (writePath.slice(-1) !== '/') {
+            writePath += '/'
+        }
         await fs.promises.appendFile(writePath + fileName, translation)
         console.log(`${country}: data appended successfully`)
     } catch (error) {

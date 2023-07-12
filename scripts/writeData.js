@@ -22,11 +22,12 @@ const filePathMap = {
  * @param {string} translation - magento translation e.g. 'ukWord,translatedWord \n'
  * @param {string} fileName - name of file to write to
  * @param {string} country - country code e.g. ES
+ * @param {string} writePath - the path that contains the .csv translation files to be updated
  * @return {void}
  */
-async function concatToFile(translation, fileName, country) {
+async function concatToFile(translation, fileName, country, writePath) {
     try {
-        await fs.promises.appendFile(keys.translationsDir + fileName, translation)
+        await fs.promises.appendFile(writePath + fileName, translation)
         console.log(`${country}: data appended successfully`)
     } catch (error) {
         console.log(country + ':')
@@ -37,12 +38,13 @@ async function concatToFile(translation, fileName, country) {
 /**
  * Adds translations to the corresponding files
  * @param {Object} translations - e.g { countryCode: 'translations', countryCode: 'translaltions'... }
+ * @param {string} writePath - the path that contains the .csv translation files to be updated
  * @return {void}
  */
-function addTranslationsToFiles(translations) {
+function addTranslationsToFiles(translations, writePath) {
     for (let [countryCode, translation] of Object.entries(translations)) {
         if (filePathMap[countryCode]) {
-            concatToFile(translation, filePathMap[countryCode], countryCode)
+            concatToFile(translation, filePathMap[countryCode], countryCode, writePath)
         }
     }
 }
@@ -50,24 +52,26 @@ function addTranslationsToFiles(translations) {
 /**
  * adds translations to files from local csv file
  * @param {string} path - file path
+ * @param {string} writePath - the path that contains the .csv translation files to be updated
  * @return {void}
  */
-async function addTranslationsFromLocalFile(path) {
-    const translations = await get.readFileFromPath(path)
-    addTranslationsToFiles(translations)
+async function addTranslationsFromLocalFile(readPath, writePath) {
+    const translations = await get.readFileFromPath(readPath)
+    addTranslationsToFiles(translations, writePath)
 }
-addTranslationsFromLocalFile('/home/matt/translations.csv')
 
 /**
  * adds translations to files from google sheet
  * @param {string} googleSheetId - id of google sheet
+ * @param {string} writePath - the path that contains the .csv translation files to be updated
  * @return {void}
  */
-async function addTranslationsFromGoogleSheet(googleSheetId) {
+async function addTranslationsFromGoogleSheet(googleSheetId, writePath) {
     const translations = await get.readFromGoogleSheet(googleSheetId)
-    addTranslationsToFiles(translations)
+    addTranslationsToFiles(translations, writePath)
 }
 
 module.exports = {
-    addTranslationsToFiles
+    addTranslationsFromLocalFile,
+    addTranslationsFromGoogleSheet
 }

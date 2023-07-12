@@ -39,7 +39,13 @@ function readFileFromPath(filePath) {
  */
 async function readFromGoogleSheet(sheetId) {
     const url = GOOGLE_SHEET_BASE_URL + sheetId + '/values/A1:S40?key=' + keys.googleSheets
-    const { data: jsonData } = await axios.get(url, { responseType: 'json'})
+    let jsonData
+    try {
+        const data = await axios.get(url, { responseType: 'json'})
+        jsonData = data.data
+    } catch (err) {
+        console.error(err.response.data.error.message)
+    }
     const translations = {}
 
     // map data to { countryCode: 'translations'}

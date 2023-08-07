@@ -16,7 +16,7 @@ function readFileFromPath(filePath) {
         fs.createReadStream(filePath)
             .pipe(csv())
             .on('data', (data) => {
-                let translation = ''
+                let translation = '\n'
                 // first row of data is the country e.g. UK: DE
                 const country = data.UK
                 delete data.UK
